@@ -108,14 +108,19 @@ let REMOTE = null;
 
 async function apiGet() {
   if (!API) return null;
-  try {
-    const r = await fetch(API + "?t=" + Date.now(), { cache: "no-store" });
-    if (!r.ok) return null;
-    const j = await r.json();
-    return j && j.ok ? j : null;
-  } catch (e) {
-    return null;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(API + "?t=" + Date.now(), { cache: "no-store" });
+      if (r.ok) {
+        const j = await r.json();
+        if (j && j.ok) return j;
+      }
+    } catch (e) {
+      /* 試多次 */
+    }
+    await new Promise((res) => setTimeout(res, 600));
   }
+  return null;
 }
 
 // 用 no-cors 送（Apps Script 唔會擋 CORS），之後靠 apiGet 輪詢確認

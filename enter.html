@@ -78,20 +78,20 @@ function go() {
 }
 
 function submit(name, pts) {
-  // 有共用後端：送去 Google Sheet，輪詢到確認為止
+  // 有共用後端：送去 Google Sheet，輪詢到確認為先跳轉
   if (API) {
     const before = (REMOTE && REMOTE.scores[name]) || 0;
-    apiAdd(name, pts).then(() => pollUntil(name, before + pts));
+    $("#pts").value = "";
+    apiAdd(name, pts).then(() => pollUntil(name, before + pts, 0));
   } else {
     addScore(name, pts);
     go();
   }
 }
 
-// 最多等 12 秒等 Google 寫入
+// 最多等 20 秒等 Google 寫入；失敗要講，唔可以靜靜哋當成功
 async function pollUntil(name, want, tries) {
-  tries = tries || 0;
-  if (tries > 12) return go();
+  if (tries > 20) return failSubmit();
   const d = await apiGet();
   const got = d && d.scores ? Number(d.scores[name]) || 0 : 0;
   if (got >= want) {
@@ -100,6 +100,13 @@ async function pollUntil(name, want, tries) {
   }
   await new Promise((r) => setTimeout(r, 1000));
   pollUntil(name, want, tries + 1);
+}
+
+function failSubmit() {
+  const b = $("#submit");
+  b.disabled = false;
+  b.textContent = "提交 →";
+  err("提交唔到，請檢查網絡再試一次。");
 }
 
 function init() {
