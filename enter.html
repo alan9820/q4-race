@@ -67,11 +67,8 @@ function renderMyLog() {
   const log = curLog().filter((e) => e.name === name).slice(0, 8);
   if (!log.length) { box.innerHTML = '<div class="empty">未有記錄。</div>'; return; }
   box.innerHTML = log.map((e) => {
-    const d = new Date(e.time);
-    const t = (d.getMonth() + 1) + "/" + d.getDate() + " " +
-      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
     const sign = e.points >= 0 ? "+" : "";
-    return "<div><span>" + t + "</span><span>" + sign + fmt(e.points) + "</span></div>";
+    return "<div><span>" + fmtTime(e.time) + "</span><span>" + sign + fmt(e.points) + "</span></div>";
   }).join("");
 }
 

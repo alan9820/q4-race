@@ -10,7 +10,8 @@
 const FINISH = 250000;
 
 // 共用後端（Google Apps Script /exec）。空白 = 淨係用本機 localStorage。
-const API = "";
+const API =
+  "https://script.google.com/macros/s/AKfycbwkk8Fp49_7IazR4ibqSq5Wd3ljh-tH3YmBABW9aoYGuCfLXttbgepvsdgRD9sFOrm1/exec";
 
 // 人員名單（可以喺頁面內直接加 / 刪，呢個只係預設名單）
 const ROSTER = [
@@ -135,6 +136,16 @@ const nf = new Intl.NumberFormat("en-US");
 
 function fmt(n) {
   return nf.format(Math.round(Number(n) || 0));
+}
+
+// 時間顯示：Apps Script 回嘅係本地格式字串，parse 唔到就直接攤返原文
+function fmtTime(t) {
+  const d = new Date(t);
+  if (isNaN(d.getTime())) return String(t).slice(0, 24);
+  return (
+    (d.getMonth() + 1) + "/" + d.getDate() + " " +
+    String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0")
+  );
 }
 
 function pct(score) {

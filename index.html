@@ -160,12 +160,9 @@ function renderLog() {
   const tb = $("#logBody");
   if (!log.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">未有記錄</td></tr>'; return; }
   tb.innerHTML = log.map((e) => {
-    const d = new Date(e.time);
-    const t = (d.getMonth() + 1) + "/" + d.getDate() + " " +
-      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
     const sign = e.points >= 0 ? "+" : "";
-    return '<tr class="' + (e.points >= 0 ? "pos" : "neg") + '"><td>' + t + "</td><td>" + e.name +
-      '</td><td class="n">' + sign + fmt(e.points) + "</td></tr>";
+    return '<tr class="' + (e.points >= 0 ? "pos" : "neg") + '"><td>' + fmtTime(e.time) +
+      "</td><td>" + e.name + '</td><td class="n">' + sign + fmt(e.points) + "</td></tr>";
   }).join("");
 }
 
