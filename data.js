@@ -15,14 +15,26 @@ const API =
 
 // 人員名單（可以喺頁面內直接加 / 刪，呢個只係預設名單）
 const ROSTER = [
-  "隊員 01",
-  "隊員 02",
-  "隊員 03",
-  "隊員 04",
-  "隊員 05",
-  "隊員 06",
-  "隊員 07",
-  "隊員 08",
+  "Alan",
+  "Ellie",
+  "Kevin",
+  "Abby",
+  "Abigail",
+  "Anson",
+  "Batson",
+  "Catherine",
+  "Krystal",
+  "Lay",
+  "Macy",
+  "Monica",
+  "Nathaniel",
+  "Porter",
+  "Ric",
+  "Ridi",
+  "Stella",
+  "Stephanie",
+  "Vito",
+  "Pecky",
 ];
 
 const KEY_SCORES = "q4_race_scores_v1";
