@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>衝線競賽 — 入數</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>🏁 衝線競賽</h1>
+    <div class="sub">填名 → 填分 → 提交</div>
+    <div class="pill">終點線：<b id="finishTxt">—</b> 分 · 過咗終點繼續跑</div>
+  </header>
+
+  <div class="card">
+    <label class="lbl" for="who">① 揀返你個名</label>
+    <select id="who"></select>
+
+    <label class="lbl" for="pts">② 填今次拎到幾多分</label>
+    <input class="big" id="pts" type="text" inputmode="numeric" pattern="[0-9\-]*" placeholder="0" autocomplete="off">
+    <div class="hint">累加落總分 · 可以輸入負數扣分</div>
+
+    <button id="submit">提交 →</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card">
+    <h2 class="sec">我最近入嘅數</h2>
+    <div class="done-list" id="myLog"></div>
+  </div>
+
+  <footer class="foot">分數存喺本機瀏覽器</footer>
+</div>
+
+<nav class="tabbar">
+  <div class="inner">
+    <button class="ghost" id="navBoard">🏁 衝線頁</button>
+    <button class="ghost active" id="navEnter">✍️ 入數</button>
+  </div>
+</nav>
+
+<script src="data.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+
+function fillSelect() {
+  const sel = $("#who");
+  const list = getRoster();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— 揀你個名 —</option>' +
+    list.map((n) => '<option value="' + n + '">' + n + "</option>").join("");
+  if (list.includes(cur)) sel.value = cur;
+}
+
+function err(msg) {
+  $("#err").textContent = msg;
+  $("#err").style.display = "block";
+}
+
+function renderMyLog() {
+  const name = $("#who").value;
+  const box = $("#myLog");
+  if (!name) { box.innerHTML = '<div class="empty">揀返你個名就見到。</div>'; return; }
+  const log = getLog().filter((e) => e.name === name).slice(0, 8);
+  if (!log.length) { box.innerHTML = '<div class="empty">未有記錄。</div>'; return; }
+  box.innerHTML = log.map((e) => {
+    const d = new Date(e.time);
+    const t = (d.getMonth() + 1) + "/" + d.getDate() + " " +
+      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const sign = e.points >= 0 ? "+" : "";
+    return "<div><span>" + t + "</span><span>" + sign + fmt(e.points) + "</span></div>";
+  }).join("");
+}
+
+function go() {
+  const name = $("#who").value;
+  location.href = "index.html" + (name ? "?me=" + encodeURIComponent(name) : "");
+}
+
+function init() {
+  $("#finishTxt").textContent = fmt(FINISH);
+  fillSelect();
+  $("#who").addEventListener("change", renderMyLog);
+  renderMyLog();
+
+  $("#pts").addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/[^\d\-]/g, "");
+  });
+
+  $("#submit").addEventListener("click", () => {
+    $("#err").style.display = "none";
+    const name = $("#who").value;
+    const v = $("#pts").value.trim();
+    if (!name) return err("請先揀返你個名。");
+    if (v === "" || isNaN(Number(v))) return err("請輸入分數。");
+    if (Number(v) === 0) return err("分數唔可以係 0。");
+    addScore(name, Number(v));
+    go();
+  });
+
+  $("#pts").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#submit").click(); });
+  $("#navBoard").addEventListener("click", go);
+  $("#navEnter").addEventListener("click", (e) => e.preventDefault());
+
+  window.addEventListener("storage", () => { fillSelect(); renderMyLog(); });
+}
+
+init();
+</script>
+</body>
+</html>

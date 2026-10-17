@@ -1,0 +1,176 @@
+/* ============================================================
+   Q4 衝線競賽 — 共用設定
+   ------------------------------------------------------------
+   想改人員名單？改下面 ROSTER 陣列，或者喺排行榜頁按「名單」
+   直接加人（加咗嘅名會存在本機瀏覽器）。
+   想改終點分數？改 FINISH 呢個數字就得。
+   ============================================================ */
+
+// 終點線分數
+const FINISH = 250000;
+
+// 人員名單（可以喺頁面內直接加 / 刪，呢個只係預設名單）
+const ROSTER = [
+  "隊員 01",
+  "隊員 02",
+  "隊員 03",
+  "隊員 04",
+  "隊員 05",
+  "隊員 06",
+  "隊員 07",
+  "隊員 08",
+];
+
+const KEY_SCORES = "q4_race_scores_v1";
+const KEY_ROSTER = "q4_race_roster_v1";
+const KEY_LOG = "q4_race_log_v1";
+
+/* ---------- 儲存層 ---------- */
+
+function getRoster() {
+  try {
+    const raw = localStorage.getItem(KEY_ROSTER);
+    const arr = raw ? JSON.parse(raw) : null;
+    return Array.isArray(arr) && arr.length ? arr : ROSTER.slice();
+  } catch (e) {
+    return ROSTER.slice();
+  }
+}
+
+function saveRoster(list) {
+  localStorage.setItem(KEY_ROSTER, JSON.stringify(list));
+}
+
+// { name: 總分 }
+function getScores() {
+  try {
+    const raw = localStorage.getItem(KEY_SCORES);
+    const obj = raw ? JSON.parse(raw) : null;
+    return obj && typeof obj === "object" ? obj : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveScores(obj) {
+  localStorage.setItem(KEY_SCORES, JSON.stringify(obj));
+}
+
+// 記錄每次入數，方便對數
+function getLog() {
+  try {
+    const raw = localStorage.getItem(KEY_LOG);
+    const arr = raw ? JSON.parse(raw) : null;
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function pushLog(entry) {
+  const log = getLog();
+  log.unshift(entry);
+  localStorage.setItem(KEY_LOG, JSON.stringify(log.slice(0, 500)));
+}
+
+function addScore(name, points) {
+  const s = getScores();
+  s[name] = (Number(s[name]) || 0) + points;
+  saveScores(s);
+  pushLog({ name: name, points: points, time: new Date().toISOString() });
+  return s[name];
+}
+
+function clearAll() {
+  localStorage.removeItem(KEY_SCORES);
+  localStorage.removeItem(KEY_LOG);
+}
+
+/* ---------- 顯示工具 ---------- */
+
+const nf = new Intl.NumberFormat("en-US");
+
+function fmt(n) {
+  return nf.format(Math.round(Number(n) || 0));
+}
+
+function pct(score) {
+  return Math.min((Number(score) / FINISH) * 100, 999);
+}
+
+// 距離終點：正數 = 未到，負數 = 已衝線超額
+function gap(score) {
+  return FINISH - (Number(score) || 0);
+}
+
+function scaleMax() {
+  const s = getScores();
+  const top = Math.max(FINISH, ...Object.values(s).map((v) => Number(v) || 0), 0);
+  return Math.max(FINISH, Math.ceil((top * 1.08) / 25000) * 25000);
+}
+
+function board() {
+  const roster = getRoster();
+  const s = getScores();
+  const rows = roster.map((name) => ({ name: name, score: Number(s[name]) || 0 }));
+  rows.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  rows.forEach((r, i) => (r.rank = i + 1));
+  return rows;
+}
+
+function statusText(score) {
+  const g = gap(score);
+  if (g > 0) return { text: "距離終點 " + fmt(g) + " 分", cls: "behind" };
+  return { text: "已衝線 +" + fmt(-g) + " 分", cls: "passed" };
+}
+
+/* ---------- 團隊總目標 ---------- */
+
+// 全隊總分對全隊總目標（人數 × 終點分數）
+function teamTotal() {
+  const rows = board();
+  const sum = rows.reduce((a, r) => a + r.score, 0);
+  const target = FINISH * (rows.length || 1);
+  return {
+    sum: sum,
+    target: target,
+    gap: target - sum,
+    pct: target ? (sum / target) * 100 : 0,
+    done: rows.filter((r) => r.score >= FINISH).length,
+    total: rows.length,
+  };
+}
+
+/* ---------- 跑道 bar ---------- */
+
+// score 只可以係數字
+function trackHTML(score, opts) {
+  opts = opts || {};
+  const max = scaleMax();
+  const p = Math.max(0, Math.min((Number(score) / max) * 100, 100));
+  const finishP = (FINISH / max) * 100;
+  const passed = Number(score) >= FINISH;
+  return (
+    '<div class="track' + (passed ? " passed" : "") + '">' +
+      '<div class="lane">' +
+        '<div class="fill" style="width:' + p.toFixed(2) + '%"></div>' +
+        (passed ? '<div class="glow"></div>' : "") +
+      '</div>' +
+      '<div class="finish" style="left:' + finishP.toFixed(2) + '%">' +
+        '<span class="flag">🏁</span>' +
+      '</div>' +
+      '<div class="runner" style="left:' + p.toFixed(2) + '%">' +
+        (opts.small ? "" : '<span class="dot"></span>') +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function barWrap(score, extraClass) {
+  return (
+    '<div class="trackwrap ' + (extraClass || "") + '">' +
+      trackHTML(score) +
+      '<div class="scalebar"><span>0</span><span>終點 ' + fmt(FINISH) + '</span><span>' + fmt(scaleMax()) + "</span></div>" +
+    "</div>"
+  );
+}

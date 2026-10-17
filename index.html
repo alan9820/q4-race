@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>衝線競賽 — 衝線頁</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>🏁 衝線競賽</h1>
+    <div class="sub">終點線 <span id="finishTxt">—</span> 分 · 過咗終點繼續跑</div>
+  </header>
+
+  <!-- 團隊總目標（精簡） -->
+  <div class="card" style="padding:14px">
+    <div class="team">
+      <div class="bar"><div class="fill" id="teamFill" style="width:0%"></div></div>
+      <div class="meta"><span id="teamNow">—</span><span id="teamTarget">—</span></div>
+    </div>
+  </div>
+
+  <!-- 人員名單管理 -->
+  <div class="card" id="rosterCard" style="display:none">
+    <h2 class="sec">⚙️ 人員名單</h2>
+    <div class="roster-edit">
+      <input id="newName" placeholder="加一個名" autocomplete="off">
+      <button id="addName">＋</button>
+    </div>
+    <div class="tags" id="tags"></div>
+    <div class="btnrow">
+      <button class="ghost" id="saveRoster">💾 貼上整段名單</button>
+      <button class="ghost" id="exportBtn">⬇️ 匯出</button>
+      <button class="ghost" id="importBtn">⬆️ 匯入</button>
+      <button class="ghost" id="clearBtn">🗑 清空分數</button>
+    </div>
+    <input id="fileIn" type="file" accept=".json" style="display:none">
+  </div>
+
+  <h2 class="sec">👥 全員總覽 <span style="font-weight:400">· 提交完就睇到全部人</span></h2>
+  <div class="card" id="ovCard" style="padding:12px 12px 6px">
+    <div class="legend">
+      <span>0</span>
+      <span class="fin">🏁 終點 <span id="finTxt2">—</span></span>
+      <span id="maxTxt">—</span>
+    </div>
+    <div id="overview"></div>
+  </div>
+
+  <div class="stats" id="stats" style="margin:2px 0 16px"></div>
+
+  <h2 class="sec">🔎 各人詳細距離</h2>
+  <div id="board"></div>
+
+  <div class="card" style="margin-top:6px">
+    <h2 class="sec">🕘 最近入數紀錄</h2>
+    <table class="log"><thead><tr><th>時間</th><th>人員</th><th class="n">分數</th></tr></thead>
+    <tbody id="logBody"></tbody></table>
+  </div>
+
+  <footer class="foot">分數存喺本機瀏覽器（localStorage）</footer>
+</div>
+
+<nav class="tabbar">
+  <div class="inner">
+    <button class="ghost active" id="navBoard">🏁 衝線頁</button>
+    <button class="ghost" id="navEnter">✍️ 入數</button>
+  </div>
+</nav>
+
+<script src="data.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const ME = new URLSearchParams(location.search).get("me") || "";
+
+function renderTeam() {
+  const t = teamTotal();
+  const passed = t.gap <= 0;
+  $("#teamFill").style.width = Math.min(t.pct, 100).toFixed(2) + "%";
+  $("#teamNow").innerHTML = "已累積 <b style='color:var(--txt)'>" + fmt(t.sum) + "</b> 分 · " + t.pct.toFixed(1) + "%";
+  $("#teamTarget").innerHTML = passed
+    ? "<b style='color:var(--gold)'>已達標 +" + fmt(-t.gap) + " 分</b>"
+    : "仲差 <b style='color:var(--gold)'>" + fmt(t.gap) + "</b> 分";
+
+  const rows = board();
+  const top = rows[0];
+  const closest = rows.slice().sort((a, b) => gap(a.score) - gap(b.score))[0];
+  const behindOnly = rows.filter((r) => r.score < FINISH)
+    .sort((a, b) => gap(a.score) - gap(b.score))[0];
+
+  $("#stats").innerHTML =
+    '<div class="stat"><div class="k">已達標人數</div><div class="v' + (t.done ? " gold" : "") + '">' + t.done + " / " + t.total + "</div></div>" +
+    '<div class="stat"><div class="k">目前第一</div><div class="v sm">' + (top && top.score > 0 ? top.name : "—") + "</div></div>" +
+    '<div class="stat"><div class="k">仲差最耐衝線</div><div class="v sm">' +
+      (behindOnly ? behindOnly.name + '<br><span style="font-size:12px;color:#93c5fd">仲差 ' + fmt(gap(behindOnly.score)) + " 分</span>" : "全部達標 🎉") + "</div></div>" +
+    '<div class="stat"><div class="k">離終點最近</div><div class="v sm">' +
+      (closest ? closest.name + "<br>" + statusText(closest.score).text : "—") + "</div></div>";
+}
+
+function renderOverview() {
+  const rows = board();
+  const max = scaleMax();
+  $("#finTxt2").textContent = fmt(FINISH);
+  $("#maxTxt").textContent = fmt(max);
+  $("#overview").innerHTML = rows.map((r) => {
+    const passed = r.score >= FINISH;
+    const medal = r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : "";
+    const me = r.name === ME;
+    const sub = passed ? "超 " + fmt(r.score - FINISH) : "差 " + fmt(FINISH - r.score);
+    return (
+      '<div class="ovrow' + (me ? " me" : "") + '"' + (me ? ' id="myOv"' : "") + ">" +
+        '<div class="rank' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + (r.rank <= 3 ? medal : r.rank) + "</div>" +
+        '<div class="nm">' + r.name + (me ? " <b style='color:var(--c2)'>我</b>" : "") + "</div>" +
+        '<div class="t">' + trackHTML(r.score) + "</div>" +
+        '<div class="val' + (passed ? " passed" : "") + '">' + fmt(r.score) + "<small>" + sub + "</small></div>" +
+      "</div>"
+    );
+  }).join("");
+}
+
+function renderBoard() {
+  const rows = board();
+  $("#board").innerHTML = rows.map((r) => {
+    const st = statusText(r.score);
+    const medal = r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : "";
+    const badge = r.score >= FINISH ? '<span class="badge">已衝線</span>' : "";
+    const me = r.name === ME ? '<span class="mytag">我</span>' : "";
+    const pctDone = ((r.score / FINISH) * 100).toFixed(1);
+    return (
+      '<div class="row' + (r.rank === 1 ? " top1" : "") + (me ? " me" : "") + '"' +
+        (me ? ' id="myRow"' : "") + ">" +
+        '<div class="rname">' +
+          '<div class="rank' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + (r.rank <= 3 ? medal : r.rank) + "</div>" +
+          '<div class="nm">' + r.name + me + badge + "</div>" +
+        "</div>" +
+        '<div class="rnums">' +
+          '<div class="score">' + fmt(r.score) + '<span class="u">分</span></div>' +
+          '<div class="gap ' + st.cls + '">' + st.text +
+            '<span class="sub">完成度 ' + pctDone + "%</span></div>" +
+        "</div>" +
+        barWrap(r.score) +
+      "</div>"
+    );
+  }).join("");
+
+  if (ME) {
+    // 提交後跳轉：碌到「全員總覽」最頂，確保全部人個 bar 喺畫面度
+    const ov = document.getElementById("ovCard");
+    if (ov) {
+      const y = ov.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  }
+}
+
+function renderLog() {
+  const log = getLog().slice(0, 15);
+  const tb = $("#logBody");
+  if (!log.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">未有記錄</td></tr>'; return; }
+  tb.innerHTML = log.map((e) => {
+    const d = new Date(e.time);
+    const t = (d.getMonth() + 1) + "/" + d.getDate() + " " +
+      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    const sign = e.points >= 0 ? "+" : "";
+    return '<tr class="' + (e.points >= 0 ? "pos" : "neg") + '"><td>' + t + "</td><td>" + e.name +
+      '</td><td class="n">' + sign + fmt(e.points) + "</td></tr>";
+  }).join("");
+}
+
+function renderTags() {
+  $("#tags").innerHTML = getRoster().map((n) =>
+    '<span class="tag">' + n + '<button data-n="' + n + '">✕</button></span>').join("");
+  $("#tags").querySelectorAll("button").forEach((b) => {
+    b.addEventListener("click", () => {
+      saveRoster(getRoster().filter((x) => x !== b.dataset.n));
+      renderTags(); renderAll();
+    });
+  });
+}
+
+function renderAll() {
+  $("#finishTxt").textContent = fmt(FINISH);
+  renderTeam();
+  renderOverview();
+  renderBoard();
+  renderLog();
+  renderTags();
+}
+
+function init() {
+  renderAll();
+
+  $("#navEnter").addEventListener("click", () => (location.href = "enter.html"));
+  $("#navBoard").addEventListener("click", (e) => e.preventDefault());
+
+  const card = $("#rosterCard");
+  let adminShown = false;
+  function toggleAdmin() {
+    adminShown = !adminShown;
+    card.style.display = adminShown ? "block" : "none";
+  }
+
+  // 長按標題 3 秒開管理（手機唔想俾人亂撳）
+  let holdTimer = null;
+  const h1 = document.querySelector("header.top h1");
+  const startHold = () => { holdTimer = setTimeout(() => { if (!adminShown) toggleAdmin(); }, 1200); };
+  const endHold = () => clearTimeout(holdTimer);
+  h1.addEventListener("touchstart", startHold);
+  h1.addEventListener("touchend", endHold);
+  h1.addEventListener("mousedown", startHold);
+  h1.addEventListener("mouseup", endHold);
+  h1.addEventListener("dblclick", toggleAdmin);
+
+  $("#newName").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#addName").click(); });
+  $("#addName").addEventListener("click", () => {
+    const v = $("#newName").value.trim();
+    if (!v) return;
+    const r = getRoster();
+    if (!r.includes(v)) { r.push(v); saveRoster(r); }
+    $("#newName").value = "";
+    renderAll();
+  });
+
+  $("#saveRoster").addEventListener("click", () => {
+    const raw = prompt("貼上名單（每行一個，或用逗號）：", getRoster().join("\n"));
+    if (raw === null) return;
+    const list = raw.split(/[\n,、]/).map((s) => s.trim()).filter(Boolean);
+    if (list.length) { saveRoster(list); renderAll(); }
+  });
+
+  $("#exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ finish: FINISH, scores: getScores(), log: getLog(), roster: getRoster() }, null, 2)],
+      { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "race-scores-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+  });
+
+  $("#importBtn").addEventListener("click", () => $("#fileIn").click());
+  $("#fileIn").addEventListener("change", (ev) => {
+    const f = ev.target.files[0];
+    if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const d = JSON.parse(fr.result);
+        if (d.scores) saveScores(d.scores);
+        if (d.roster) saveRoster(d.roster);
+        if (d.log) localStorage.setItem(KEY_LOG, JSON.stringify(d.log));
+        renderAll();
+        alert("匯入完成");
+      } catch (e) { alert("檔案格式唔啱"); }
+    };
+    fr.readAsText(f);
+  });
+
+  $("#clearBtn").addEventListener("click", () => {
+    if (confirm("真係要清空所有分數？")) { clearAll(); renderAll(); }
+  });
+
+  window.addEventListener("storage", renderAll);
+}
+
+init();
+</script>
+</body>
+</html>
