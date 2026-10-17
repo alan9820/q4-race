@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>衝線競賽 — 衝線頁</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <div class="wrap">
@@ -72,7 +72,7 @@
   </div>
 </nav>
 
-<script src="data.js?v=7"></script>
+<script src="data.js?v=8"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 const ME = new URLSearchParams(location.search).get("me") || "";
@@ -87,19 +87,19 @@ function renderTeam() {
     : "仲差 <b style='color:var(--gold)'>" + fmt(t.gap) + "</b> 分";
 
   const rows = board();
-  const podium = rows.slice(0, 3);
+  // 頭三名只顯示真係有分數嘅人（全部 0 就唔好顯示）
+  const podium = rows.filter((r) => r.score > 0).slice(0, 3);
   const medals = ["🥇", "🥈", "🥉"];
 
   $("#stats").innerHTML =
     '<div class="stat"><div class="k">已達標人數</div><div class="v' + (t.done ? " gold" : "") + '">' + t.done + " / " + t.total + "</div></div>" +
     '<div class="stat"><div class="k">頭三名</div><div class="v sm"><div class="podium">' +
-      podium.map((r, i) =>
-        '<div class="pod p' + (i + 1) + '"><span class="m">' + medals[i] + '</span>' +
-        '<span class="n">' + r.name + '</span><span class="s">' + fmt(r.score) + "</span></div>"
-      ).join("") +
-      (podium.length < 3
-        ? '<div class="pod empty"><span class="m">—</span><span class="n">仲未有分數</span><span class="s"></span></div>'
-        : "") +
+      (podium.length
+        ? podium.map((r, i) =>
+            '<div class="pod p' + (i + 1) + '"><span class="m">' + medals[i] + '</span>' +
+            '<span class="n">' + r.name + '</span><span class="s">' + fmt(r.score) + "</span></div>"
+          ).join("")
+        : '<div class="pod empty"><span class="m">—</span><span class="n">未有分數</span><span class="s">等你開跑</span></div>') +
     "</div></div></div>";
 }
 
