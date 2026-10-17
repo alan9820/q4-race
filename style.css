@@ -8,7 +8,7 @@
   --panel2: #f7f9fd;
   --line: #dfe6f0;
   --txt: #16203a;
-  --dim: #6b7890;
+  --dim: #5a6a85;
   --lane: #e6ecf6;
   --c1: #2563eb;
   --c2: #06b6d4;
@@ -132,7 +132,7 @@ h2.sec {
   font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
 .ovrow .val.passed { color: var(--gold); }
-.ovrow .val small { display: block; font-size: 9px; font-weight: 600; color: var(--dim); }
+.ovrow .val small { display: block; font-size: 9px; font-weight: 700; color: #6b7a92; }
 
 /* ---------- 榜單行 ---------- */
 .row {
@@ -174,7 +174,7 @@ h2.sec {
 .gap { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
 .gap.behind { color: #1d4ed8; }
 .gap.passed { color: var(--gold); font-weight: 800; }
-.gap .sub { display: block; font-size: 11px; color: var(--dim); font-weight: 400; }
+.gap .sub { display: block; font-size: 11px; color: #6b7a92; font-weight: 600; }
 
 /* ---------- 跑道 ---------- */
 .trackwrap { margin-top: 10px; }
@@ -200,7 +200,7 @@ h2.sec {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, .95), 0 1px 3px rgba(0, 0, 0, .2);
   transition: left .6s ease;
 }
-.scalebar { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-top: 5px; }
+.scalebar { display: flex; justify-content: space-between; font-size: 10px; color: #6b7a92; font-weight: 600; margin-top: 5px; }
 
 /* ---------- 表單 ---------- */
 label.lbl { display: block; font-size: 13px; color: var(--dim); margin: 14px 0 6px; }
@@ -213,7 +213,7 @@ select, input, textarea {
   -webkit-appearance: none; appearance: none;
 }
 select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7890'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235a6a85'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 22px;
   padding-right: 40px;
 }
@@ -258,9 +258,9 @@ button.ghost {
   font-size: 14px; color: var(--dim);
 }
 .done-list div:last-child { border-bottom: 0; }
-.empty { color: #9aa6bb; font-size: 13px; text-align: center; padding: 14px 0; }
+.empty { color: #7b879b; font-size: 13px; text-align: center; padding: 14px 0; }
 
-footer.foot { text-align: center; color: #9aa6bb; font-size: 11px; margin-top: 18px; }
+footer.foot { text-align: center; color: #7b879b; font-size: 11px; margin-top: 18px; }
 a { color: var(--c1); }
 
 .roster-edit { display: flex; gap: 8px; margin-top: 10px; }
