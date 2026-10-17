@@ -267,7 +267,7 @@ tr.neg td.n { color: #fca5a5; }
 @media (min-width: 720px) {
   .wrap { max-width: 720px; }
   body { padding: 24px 16px 40px; }
-  .stats { grid-template-columns: repeat(4, 1fr); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
   .stat.wide { grid-column: auto; }
   .tabbar { display: none; }
   header.top h1 { font-size: 28px; }

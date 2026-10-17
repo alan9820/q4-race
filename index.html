@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>衝線競賽 — 衝線頁</title>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <div class="wrap">
@@ -70,7 +70,7 @@
   </div>
 </nav>
 
-<script src="data.js?v=4"></script>
+<script src="data.js?v=5"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 const ME = new URLSearchParams(location.search).get("me") || "";
@@ -86,17 +86,12 @@ function renderTeam() {
 
   const rows = board();
   const top = rows[0];
-  const closest = rows.slice().sort((a, b) => gap(a.score) - gap(b.score))[0];
-  const behindOnly = rows.filter((r) => r.score < FINISH)
-    .sort((a, b) => gap(a.score) - gap(b.score))[0];
 
   $("#stats").innerHTML =
     '<div class="stat"><div class="k">已達標人數</div><div class="v' + (t.done ? " gold" : "") + '">' + t.done + " / " + t.total + "</div></div>" +
-    '<div class="stat"><div class="k">目前第一</div><div class="v sm">' + (top && top.score > 0 ? top.name : "—") + "</div></div>" +
-    '<div class="stat"><div class="k">仲差最耐衝線</div><div class="v sm">' +
-      (behindOnly ? behindOnly.name + '<br><span style="font-size:12px;color:#93c5fd">仲差 ' + fmt(gap(behindOnly.score)) + " 分</span>" : "全部達標 🎉") + "</div></div>" +
-    '<div class="stat"><div class="k">離終點最近</div><div class="v sm">' +
-      (closest ? closest.name + "<br>" + statusText(closest.score).text : "—") + "</div></div>";
+    '<div class="stat"><div class="k">目前第一</div><div class="v sm">' +
+      (top && top.score > 0 ? top.name + '<br><span style="font-size:13px;color:var(--gold)">' + fmt(top.score) + " 分</span>" : "—") +
+    "</div></div>";
 }
 
 function renderOverview() {
