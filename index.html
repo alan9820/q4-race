@@ -156,7 +156,7 @@ function renderBoard() {
 }
 
 function renderLog() {
-  const log = getLog().slice(0, 15);
+  const log = curLog().slice(0, 15);
   const tb = $("#logBody");
   if (!log.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">未有記錄</td></tr>'; return; }
   tb.innerHTML = log.map((e) => {
@@ -170,7 +170,7 @@ function renderLog() {
 }
 
 function renderTags() {
-  $("#tags").innerHTML = getRoster().map((n) =>
+  $("#tags").innerHTML = curRoster().map((n) =>
     '<span class="tag">' + n + '<button data-n="' + n + '">✕</button></span>').join("");
   $("#tags").querySelectorAll("button").forEach((b) => {
     b.addEventListener("click", () => {
@@ -191,6 +191,23 @@ function renderAll() {
 
 function init() {
   renderAll();
+  bootRemote();
+
+  // 有共用後端就自動同步（每 20 秒）
+  async function bootRemote() {
+    if (!API) return;
+    await syncRemote();
+    renderAll();
+    if (REMOTE) {
+      const f = document.querySelector("header.top .sub");
+      if (f) f.innerHTML = "終點線 <span id=\"finishTxt\">" + fmt(FINISH) + "</span> 分 · <b style='color:var(--green)'>全隊共用</b>";
+    }
+    setInterval(async () => {
+      const before = JSON.stringify(curScores());
+      await syncRemote();
+      if (JSON.stringify(curScores()) !== before) renderAll();
+    }, 20000);
+  }
 
   $("#navEnter").addEventListener("click", () => (location.href = "enter.html"));
   $("#navBoard").addEventListener("click", (e) => e.preventDefault());

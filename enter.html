@@ -48,7 +48,7 @@ const $ = (s) => document.querySelector(s);
 
 function fillSelect() {
   const sel = $("#who");
-  const list = getRoster();
+  const list = curRoster();
   const cur = sel.value;
   sel.innerHTML = '<option value="">— 揀你個名 —</option>' +
     list.map((n) => '<option value="' + n + '">' + n + "</option>").join("");
@@ -64,7 +64,7 @@ function renderMyLog() {
   const name = $("#who").value;
   const box = $("#myLog");
   if (!name) { box.innerHTML = '<div class="empty">揀返你個名就見到。</div>'; return; }
-  const log = getLog().filter((e) => e.name === name).slice(0, 8);
+  const log = curLog().filter((e) => e.name === name).slice(0, 8);
   if (!log.length) { box.innerHTML = '<div class="empty">未有記錄。</div>'; return; }
   box.innerHTML = log.map((e) => {
     const d = new Date(e.time);
@@ -80,11 +80,37 @@ function go() {
   location.href = "index.html" + (name ? "?me=" + encodeURIComponent(name) : "");
 }
 
+function submit(name, pts) {
+  // 有共用後端：送去 Google Sheet，輪詢到確認為止
+  if (API) {
+    const before = (REMOTE && REMOTE.scores[name]) || 0;
+    apiAdd(name, pts).then(() => pollUntil(name, before + pts));
+  } else {
+    addScore(name, pts);
+    go();
+  }
+}
+
+// 最多等 12 秒等 Google 寫入
+async function pollUntil(name, want, tries) {
+  tries = tries || 0;
+  if (tries > 12) return go();
+  const d = await apiGet();
+  const got = d && d.scores ? Number(d.scores[name]) || 0 : 0;
+  if (got >= want) {
+    REMOTE = { roster: d.roster || [], scores: d.scores || {}, log: d.log || [] };
+    return go();
+  }
+  await new Promise((r) => setTimeout(r, 1000));
+  pollUntil(name, want, tries + 1);
+}
+
 function init() {
   $("#finishTxt").textContent = fmt(FINISH);
   fillSelect();
   $("#who").addEventListener("change", renderMyLog);
   renderMyLog();
+  if (API) syncRemote().then(() => { fillSelect(); renderMyLog(); });
 
   $("#pts").addEventListener("input", (e) => {
     e.target.value = e.target.value.replace(/[^\d\-]/g, "");
@@ -97,8 +123,9 @@ function init() {
     if (!name) return err("請先揀返你個名。");
     if (v === "" || isNaN(Number(v))) return err("請輸入分數。");
     if (Number(v) === 0) return err("分數唔可以係 0。");
-    addScore(name, Number(v));
-    go();
+    $("#submit").disabled = true;
+    $("#submit").textContent = "提交緊…";
+    submit(name, Number(v));
   });
 
   $("#pts").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#submit").click(); });

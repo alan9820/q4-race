@@ -9,6 +9,9 @@
 // 終點線分數
 const FINISH = 250000;
 
+// 共用後端（Google Apps Script /exec）。空白 = 淨係用本機 localStorage。
+const API = "";
+
 // 人員名單（可以喺頁面內直接加 / 刪，呢個只係預設名單）
 const ROSTER = [
   "隊員 01",
@@ -86,6 +89,46 @@ function clearAll() {
   localStorage.removeItem(KEY_LOG);
 }
 
+/* ---------- 共用後端（有 API 就全隊共用，冇就本機） ---------- */
+
+let REMOTE = null;
+
+async function apiGet() {
+  if (!API) return null;
+  try {
+    const r = await fetch(API + "?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.ok ? j : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 用 no-cors 送（Apps Script 唔會擋 CORS），之後靠 apiGet 輪詢確認
+async function apiAdd(name, points) {
+  if (!API) return false;
+  try {
+    const body = new URLSearchParams({ name: name, points: String(points) });
+    await fetch(API, { method: "POST", mode: "no-cors", body: body, keepalive: true });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function syncRemote() {
+  const d = await apiGet();
+  if (d) {
+    REMOTE = { roster: d.roster || [], scores: d.scores || {}, log: d.log || [] };
+  }
+  return REMOTE;
+}
+
+const curRoster = () => (REMOTE && REMOTE.roster.length ? REMOTE.roster : getRoster());
+const curScores = () => (REMOTE ? REMOTE.scores : getScores());
+const curLog = () => (REMOTE ? REMOTE.log : getLog());
+
 /* ---------- 顯示工具 ---------- */
 
 const nf = new Intl.NumberFormat("en-US");
@@ -104,14 +147,14 @@ function gap(score) {
 }
 
 function scaleMax() {
-  const s = getScores();
+  const s = curScores();
   const top = Math.max(FINISH, ...Object.values(s).map((v) => Number(v) || 0), 0);
   return Math.max(FINISH, Math.ceil((top * 1.08) / 25000) * 25000);
 }
 
 function board() {
-  const roster = getRoster();
-  const s = getScores();
+  const roster = curRoster();
+  const s = curScores();
   const rows = roster.map((name) => ({ name: name, score: Number(s[name]) || 0 }));
   rows.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   rows.forEach((r, i) => (r.rank = i + 1));
