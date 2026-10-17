@@ -96,6 +96,9 @@ async function pollUntil(name, want, tries) {
   const got = d && d.scores ? Number(d.scores[name]) || 0 : 0;
   if (got >= want) {
     REMOTE = { roster: d.roster || [], scores: d.scores || {}, log: d.log || [] };
+    try {
+      sessionStorage.setItem("q4_boot", JSON.stringify(REMOTE));
+    } catch (e) {}
     return go();
   }
   await new Promise((r) => setTimeout(r, 1000));

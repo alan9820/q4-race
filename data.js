@@ -147,6 +147,17 @@ const curRoster = () => (REMOTE && REMOTE.roster.length ? REMOTE.roster : getRos
 const curScores = () => (REMOTE ? REMOTE.scores : getScores());
 const curLog = () => (REMOTE ? REMOTE.log : getLog());
 
+// 入數頁跳轉前攞到嘅最新資料，先攞去頂，免得跳轉後第一下顯示 0
+function bootFromSession() {
+  if (REMOTE || !API) return;
+  try {
+    const raw = sessionStorage.getItem("q4_boot");
+    if (raw) REMOTE = JSON.parse(raw);
+  } catch (e) {
+    /* 冇就冇所謂 */
+  }
+}
+
 /* ---------- 顯示工具 ---------- */
 
 const nf = new Intl.NumberFormat("en-US");
