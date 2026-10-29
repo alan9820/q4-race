@@ -37,6 +37,9 @@ const ROSTER = [
   "Pecky",
 ];
 
+// 通行碼（同時用喺前端閘門 + 後端 API 檢查）
+const ACCESS_KEY = "Q4RACE-7K4M-2XPQ";
+
 const KEY_SCORES = "q4_race_scores_v1";
 const KEY_ROSTER = "q4_race_roster_v1";
 const KEY_LOG = "q4_race_log_v1";
@@ -110,7 +113,7 @@ async function apiGet() {
   if (!API) return null;
   for (let i = 0; i < 3; i++) {
     try {
-      const r = await fetch(API + "?t=" + Date.now(), { cache: "no-store" });
+      const r = await fetch(API + "?t=" + Date.now() + "&key=" + encodeURIComponent(ACCESS_KEY), { cache: "no-store" });
       if (r.ok) {
         const j = await r.json();
         if (j && j.ok) return j;
@@ -127,7 +130,7 @@ async function apiGet() {
 async function apiAdd(name, points) {
   if (!API) return false;
   try {
-    const body = new URLSearchParams({ name: name, points: String(points) });
+    const body = new URLSearchParams({ name: name, points: String(points), key: ACCESS_KEY });
     await fetch(API, { method: "POST", mode: "no-cors", body: body, keepalive: true });
     return true;
   } catch (e) {
