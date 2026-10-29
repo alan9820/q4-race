@@ -38,6 +38,7 @@ body {
 
 /* ---------- 頂部 ---------- */
 header.top { text-align: center; margin-bottom: 14px; }
+header.top .brandlogo { display: block; margin: 0 auto 6px; width: min(260px, 72%); height: auto; }
 header.top h1 { margin: 0 0 4px; font-size: 23px; letter-spacing: .5px; color: #0f172a; }
 header.top .sub { color: var(--dim); font-size: 13px; }
 
