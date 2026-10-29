@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 <div class="wrap">
@@ -24,8 +24,12 @@
     <select id="who"></select>
 
     <label class="lbl" for="pts">② 填今次拎到幾多分</label>
-    <input class="big" id="pts" type="text" inputmode="numeric" pattern="[0-9\-]*" placeholder="0" autocomplete="off">
-    <div class="hint">累加落總分 · 可以輸入負數扣分</div>
+    <div class="signrow" role="group" aria-label="加減">
+      <button type="button" class="signbtn plus active" id="btnPlus">＋ 加數</button>
+      <button type="button" class="signbtn minus" id="btnMinus">－ 減數</button>
+    </div>
+    <input class="big" id="pts" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off">
+    <div class="hint" id="ptHint">累加落總分 · 按「＋ 加數」入分，按「－ 減數」扣分</div>
 
     <button id="submit">提交 →</button>
     <div class="err" id="err"></div>
@@ -46,7 +50,7 @@
   </div>
 </nav>
 
-<script src="data.js?v=13"></script>
+<script src="data.js?v=14"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 
@@ -124,8 +128,23 @@ function init() {
   if (API) syncRemote().then(() => { fillSelect(); renderMyLog(); });
 
   $("#pts").addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/[^\d\-]/g, "");
+    e.target.value = e.target.value.replace(/[^\d]/g, "");
   });
+
+  // 加數 / 減數 切換
+  let sign = 1;
+  function setSign(s) {
+    sign = s;
+    $("#btnPlus").classList.toggle("active", s > 0);
+    $("#btnMinus").classList.toggle("active", s < 0);
+    $("#pts").classList.toggle("isMinus", s < 0);
+    $("#ptHint").textContent = s > 0
+      ? "累加落總分 · 按「＋ 加數」入分，按「－ 減數」扣分"
+      : "會扣分 · 按「－ 減數」生效，輸入幾多就扣幾多";
+  }
+  $("#btnPlus").addEventListener("click", () => setSign(1));
+  $("#btnMinus").addEventListener("click", () => setSign(-1));
+  setSign(1);
 
   $("#submit").addEventListener("click", () => {
     $("#err").style.display = "none";
@@ -133,10 +152,11 @@ function init() {
     const v = $("#pts").value.trim();
     if (!name) return err("請先揀返你個名。");
     if (v === "" || isNaN(Number(v))) return err("請輸入分數。");
-    if (Number(v) === 0) return err("分數唔可以係 0。");
+    const num = Number(v) * sign;
+    if (num === 0) return err("分數唔可以係 0。");
     $("#submit").disabled = true;
     $("#submit").textContent = "提交緊…";
-    submit(name, Number(v));
+    submit(name, num);
   });
 
   $("#pts").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#submit").click(); });
