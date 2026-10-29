@@ -13,9 +13,29 @@ const FINISH = 250000;
 const API =
   "https://script.google.com/macros/s/AKfycbwkk8Fp49_7IazR4ibqSq5Wd3ljh-tH3YmBABW9aoYGuCfLXttbgepvsdgRD9sFOrm1/exec";
 
-// 人員名單唔寫喺呢度（呢啲檔係公開嘅）。
-// 名單只由 Google Sheet「roster」表經 API 攞返，Sheet 改完即刻生效。
-const ROSTER = [];
+// 人員名單（可以喺頁面內直接加 / 刪，呢個只係預設名單）
+const ROSTER = [
+  "Alan",
+  "Ellie",
+  "Kevin",
+  "Abby",
+  "Abigail",
+  "Anson",
+  "Batson",
+  "Catherine",
+  "Krystal",
+  "Lay",
+  "Macy",
+  "Monica",
+  "Nathaniel",
+  "Porter",
+  "Ric",
+  "Ridi",
+  "Stella",
+  "Stephanie",
+  "Vito",
+  "Pecky",
+];
 
 
 // 通行碼（同時用喺前端閘門 + 後端 API 檢查）
