@@ -37,9 +37,6 @@ const ROSTER = [
   "Pecky",
 ];
 
-
-// 通行碼（同時用喺前端閘門 + 後端 API 檢查）
-
 const KEY_SCORES = "q4_race_scores_v1";
 const KEY_ROSTER = "q4_race_roster_v1";
 const KEY_LOG = "q4_race_log_v1";
@@ -109,17 +106,14 @@ function clearAll() {
 
 let REMOTE = null;
 
-let GATE_REJECTED = false;
-
 async function apiGet() {
   if (!API) return null;
   for (let i = 0; i < 3; i++) {
     try {
-      const r = await fetch(API + "?t=" + Date.now() + "&key=" + encodeURIComponent(apiKey()), { cache: "no-store" });
+      const r = await fetch(API + "?t=" + Date.now(), { cache: "no-store" });
       if (r.ok) {
         const j = await r.json();
         if (j && j.ok) return j;
-        if (j && j.error === "unauthorized") { GATE_REJECTED = true; gateClear(); return null; }
       }
     } catch (e) {
       /* 試多次 */
@@ -133,7 +127,7 @@ async function apiGet() {
 async function apiAdd(name, points) {
   if (!API) return false;
   try {
-    const body = new URLSearchParams({ name: name, points: String(points), key: apiKey() });
+    const body = new URLSearchParams({ name: name, points: String(points) });
     await fetch(API, { method: "POST", mode: "no-cors", body: body, keepalive: true });
     return true;
   } catch (e) {
@@ -261,73 +255,4 @@ function barWrap(score, extraClass) {
       '<div class="scalebar"><span>0</span><span>終點 ' + fmt(FINISH) + '</span><span>' + fmt(scaleMax()) + "</span></div>" +
     "</div>"
   );
-}
-
-/* ---------- 通行碼（冇 link 嘅人入唔到） ---------- */
-/* 通行碼唔寫死喺度（呢啲檔係公開嘅）。用戶輸入一次，記喺部機 localStorage。 */
-function apiKey() { return gateKey(); }
-
-function gateKey() {
-  try { return localStorage.getItem("q4_key") || ""; }
-  catch (e) { return ""; }
-}
-
-function gateSet(k) {
-  try { localStorage.setItem("q4_key", k); } catch (e) {}
-}
-
-function gateClear() {
-  try { localStorage.removeItem("q4_key"); } catch (e) {}
-}
-
-function gatePassed() {
-  return !!gateKey();
-}
-
-function gateInit() {
-  var key = gateKey();
-  if (GATE_REJECTED) { gateClear(); key = ""; }
-  var q = new URLSearchParams(location.search).get("k");
-  if (q) {
-    gateSet(q);
-    // 清走 k 參數，唔好留喺分享 link / 瀏覽紀錄
-    var u = new URL(location.href);
-    u.searchParams.delete("k");
-    location.replace(u.pathname + u.search + u.hash);
-    return true;
-  }
-  if (key) return true;
-  gateShow();
-  return false;
-}
-
-function gateShow() {
-  document.body.classList.add("gated");
-  var box = document.createElement("div");
-  box.className = "gatebox";
-  box.innerHTML =
-    '<div class="gatetitle">🔒 呢個頁面需要通行碼</div>' +
-    '<div class="gatesub">請用 Alan 交嘅完整 link 開（通行碼已經喺 link 裏面）。<br>如果只係得個網址，可以喺下面貼上通行碼：</div>' +
-    '<input id="gateIn" type="text" placeholder="通行碼" autocomplete="off">' +
-    '<button id="gateBtn">進入</button>' +
-    '<div class="gateerr" id="gateErr"></div>';
-  document.body.appendChild(box);
-  var input = document.getElementById("gateIn");
-  var err = document.getElementById("gateErr");
-  async function tryKey() {
-    var v = (input.value || "").trim();
-    if (!v) { err.textContent = "請貼上通行碼。"; return; }
-    gateSet(v);
-    if (API) {
-      err.textContent = "檢查緊…";
-      var d = await apiGet();
-      if (d) { location.reload(); return; }
-      if (GATE_REJECTED) { gateClear(); err.textContent = "通行碼唔啱，請搵 Alan 攞返。"; return; }
-      // 後端未開通行碼檢查 → 當通過
-    }
-    location.reload();
-  }
-  document.getElementById("gateBtn").addEventListener("click", tryKey);
-  input.addEventListener("keydown", function (e) { if (e.key === "Enter") tryKey(); });
-  input.focus();
 }
