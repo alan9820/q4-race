@@ -294,3 +294,23 @@ tr.neg td.n { color: #dc2626; }
   .tabbar { display: none; }
   header.top h1 { font-size: 28px; }
 }
+
+/* ---------- 通行碼閘門 ---------- */
+body.gated .wrap, body.gated .tabbar { display: none !important; }
+.gatebox {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #f4f6fa; color: #12203a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 24px; text-align: center;
+}
+.gatetitle { font-size: 22px; font-weight: 800; }
+.gatesub { font-size: 14px; line-height: 1.6; color: #4a5a75; max-width: 420px; }
+.gatebox input {
+  width: 100%; max-width: 320px; font-size: 18px; padding: 12px 14px;
+  border: 1px solid #c9d3e2; border-radius: 10px; text-align: center;
+}
+.gatebox button {
+  width: 100%; max-width: 320px; padding: 13px 16px; font-size: 17px; font-weight: 700;
+  border: 0; border-radius: 10px; background: #1d4ed8; color: #fff; cursor: pointer;
+}
+.gateerr { color: #b91c1c; font-size: 14px; min-height: 20px; }

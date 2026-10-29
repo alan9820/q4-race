@@ -256,3 +256,61 @@ function barWrap(score, extraClass) {
     "</div>"
   );
 }
+
+/* ---------- 通行碼（冇 link 嘅人入唔到） ---------- */
+/* 通行碼喺 link 入面：index.html?k=<通行碼>，第一次入到就記喺部機 */
+const GATE_KEY_B64 = "UTRSQUNFLTdLNE0tMlhQUQ==";
+
+function gateKey() {
+  try { return decodeURIComponent(escape(atob(GATE_KEY_B64))); }
+  catch (e) { return ""; }
+}
+
+function gatePassed() {
+  try { return localStorage.getItem("q4_gate_ok") === gateKey(); }
+  catch (e) { return false; }
+}
+
+function gateInit() {
+  var key = gateKey();
+  var q = new URLSearchParams(location.search).get("k");
+  if (q) {
+    if (q === key) {
+      try { localStorage.setItem("q4_gate_ok", key); } catch (e) {}
+    }
+    // 清走 k 參數，唔好留喺分享 link / 瀏覽紀錄
+    var u = new URL(location.href);
+    u.searchParams.delete("k");
+    if (q === key) { location.replace(u.pathname + u.search + u.hash); return true; }
+  }
+  if (gatePassed()) return true;
+  gateShow();
+  return false;
+}
+
+function gateShow() {
+  document.body.classList.add("gated");
+  var box = document.createElement("div");
+  box.className = "gatebox";
+  box.innerHTML =
+    '<div class="gatetitle">🔒 呢個頁面需要通行碼</div>' +
+    '<div class="gatesub">請用 Alan 交嘅完整 link 開（通行碼已經喺 link 裏面）。<br>如果只係得個網址，可以喺下面貼上通行碼：</div>' +
+    '<input id="gateIn" type="text" placeholder="通行碼" autocomplete="off">' +
+    '<button id="gateBtn">進入</button>' +
+    '<div class="gateerr" id="gateErr"></div>';
+  document.body.appendChild(box);
+  var input = document.getElementById("gateIn");
+  var err = document.getElementById("gateErr");
+  function tryKey() {
+    var v = (input.value || "").trim();
+    if (v === gateKey()) {
+      try { localStorage.setItem("q4_gate_ok", gateKey()); } catch (e) {}
+      location.reload();
+    } else {
+      err.textContent = "通行碼唔啱，請搵 Alan 攞返。";
+    }
+  }
+  document.getElementById("gateBtn").addEventListener("click", tryKey);
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") tryKey(); });
+  input.focus();
+}
