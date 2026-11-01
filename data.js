@@ -35,6 +35,7 @@ const ROSTER = [
   "Stephanie",
   "Vito",
   "Pecky",
+  "Ariel",
 ];
 
 const KEY_SCORES = "q4_race_scores_v1";
