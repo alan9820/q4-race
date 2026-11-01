@@ -7,7 +7,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 <div class="wrap">
@@ -76,7 +76,7 @@
   </div>
 </nav>
 
-<script src="data.js?v=14"></script>
+<script src="data.js?v=15"></script>
 <script>
 const $ = (s) => document.querySelector(s);
 const ME = new URLSearchParams(location.search).get("me") || "";
@@ -117,12 +117,14 @@ function renderOverview() {
     const medal = r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : "";
     const me = r.name === ME;
     const sub = passed ? "超 " + fmt(r.score - FINISH) : "差 " + fmt(FINISH - r.score);
+    const av = '<img class="av" src="assets/photos/' + encodeURIComponent(r.name) + '.jpg" alt="' + r.name + '" ' +
+      'data-try="jpg" onerror="var e=this;var n=e.alt;var s=e.dataset.try;if(s==\'jpg\'){e.dataset.try=\'png\';e.src=\'assets/photos/\'+encodeURIComponent(n)+\'.png\';}else if(s==\'png\'){e.dataset.try=\'webp\';e.src=\'assets/photos/\'+encodeURIComponent(n)+\'.webp\';}else{e.outerHTML=\'<span class=nmtext>\'+n+\'</span>\';}">';
     return (
-      '<div class="ovrow' + (me ? " me" : "") + '"' + (me ? ' id="myOv"' : "") + ">" +
-        '<div class="rank' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + (r.rank <= 3 ? medal : r.rank) + "</div>" +
-        '<div class="nm">' + r.name + (me ? " <b style='color:var(--c2)'>我</b>" : "") + "</div>" +
-        '<div class="t">' + trackHTML(r.score) + "</div>" +
-        '<div class="val' + (passed ? " passed" : "") + '">' + fmt(r.score) + "<small>" + sub + "</small></div>" +
+      '<div class="ovrow' + (me ? " me" : "") + '"' + (me ? ' id="myOv"' : "") + '">' +
+      '<div class="rank' + (r.rank <= 3 ? " r" + r.rank : "") + '">' + (r.rank <= 3 ? medal : r.rank) + "</div>" +
+      '<div class="nm">' + av + (me ? " <b style='color:var(--c2)'>我</b>" : "") + "</div>" +
+      '<div class="t">' + trackHTML(r.score) + "</div>" +
+      '<div class="val' + (passed ? " passed" : "") + '">' + fmt(r.score) + "<small>" + sub + "</small></div>" +
       "</div>"
     );
   }).join("");

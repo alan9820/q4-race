@@ -115,15 +115,18 @@ h2.sec {
 
 .ovrow {
   display: flex; align-items: center; gap: 8px;
-  padding: 7px 10px;
+  padding: 10px 12px;
   background: var(--panel2); border: 1px solid var(--line);
   border-radius: 11px; margin-bottom: 6px;
+  min-height: 66px;
 }
 .ovrow.me { box-shadow: 0 0 0 2px var(--c2) inset; }
-.ovrow .rank { width: 22px; height: 22px; flex: 0 0 22px; font-size: 11px; border-radius: 7px; }
-.ovrow .nm { flex: 0 0 74px; font-size: 13px; }
+.ovrow .rank { width: 26px; height: 26px; flex: 0 0 26px; font-size: 11px; border-radius: 8px; }
+.ovrow .nm { flex: 0 0 64px; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.ovrow .nm .av { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--line); }
+.ovrow .nm .nmtext { font-size: 13px; font-weight: 700; text-align: center; }
 .ovrow .t { flex: 1 1 auto; min-width: 60px; }
-.ovrow .t .track { height: 14px; }
+.ovrow .t .track { height: 16px; }
 .ovrow .t .flag { display: none; }
 .ovrow .t .finish { top: -3px; bottom: -3px; }
 .ovrow .t .finish::before { border-left-width: 2px; border-left-color: #64748b; }
